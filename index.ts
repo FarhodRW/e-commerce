@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import auth from './router/auth';
 import userRouter from './router/user-router';
 import productRouter from './router/product-router'
+import cartRouter from './router/cart-router'
 
 const app = express();
 dotenv.config({});
@@ -20,6 +21,9 @@ app.use(express.json());
 app.use('/user/auth', auth)
 app.use('/user', userRouter)
 app.use('/product', productRouter)
+app.use('/cart', cartRouter)
+
+
 
 
 

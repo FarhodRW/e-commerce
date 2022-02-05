@@ -47,38 +47,25 @@ router.delete('/:id', verifyToken, async (req, res) => {
 })
 
 //get a cart
-router.get('/find/:id', async (req, res) => {
+router.get('/find/:UserId', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
-    res.status(201).send(product)
+    const cart = await Cart.findOne({ UserId: req.params.UserId })
+    res.status(201).send(cart)
   } catch (error) {
     res.status(500).send(error)
   }
 })
 
-// //get sorted products
-// router.get('/find', async (req, res) => {
-//   const qNew = req.query.new
-//   const qCategory = req.query.category
+//Get all products(ONLLY admin)
+router.get('/carts', verifyTokenAdmin, async (req, res) => {
+  try {
+    const carts = await Cart.find()
+    res.status(200).send(carts)
+  } catch (error) {
+    res.status(500).send(error)
+  }
 
-//   try {
-//     let products
-//     if (qNew) {
-//       products = await Product.find().sort({ createdAt: -1 })
-//     }
-//     else if (qCategory) {
-//       products = await Product.find({
-//         categories: {
-//           $in: [qCategory]
-//         }
-//       })
-//     }
-//     else products = await Product.find()
-//     res.status(201).send(products)
-//   } catch (error) {
-//     res.status(500).send(error)
-//   }
-// })
+})
 
 
 
