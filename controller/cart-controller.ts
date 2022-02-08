@@ -1,11 +1,11 @@
-import { Cart } from '../model/cart'
+import { Cart } from '../db/model/cart/cart.model'
 
 export async function createCart(req: any, res: any) {
 
   const newCart = new Cart(req.body)
   try {
     const savedCart = await newCart.save();
-    res.status(200).send(newCart)
+    res.status(200).send(savedCart)
   } catch (error) {
     res.status(500).send(error)
   }

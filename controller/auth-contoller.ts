@@ -1,50 +1,42 @@
-import { User } from '../model/user'
+import { User } from '../db/model/user/user.model'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import { userJoiSchema } from '../middleware/validation'
+import { validateIt } from '../middleware/validation'
+import { UserDroGroup, UserDto } from '../dto/user.dto'
+import { UserDefinedError } from '../db/common/common.error'
+import { createUserService, getUserByUserNameService } from '../service/user.service'
+import { UserError } from '../db/model/user/user.error'
 
-export async function registerController(req: any, res: any) {
-  console.log(req.body)
-  const dto = req.body
-  const validation = await userJoiSchema.validateAsync(dto)
-  const hashedPassword = await bcrypt.hash(dto.password, 8)
-
-  const newUser = new User({
-    username: dto.username,
-    email: dto.email,
-    password: hashedPassword
-  })
+export async function registerController(req, res, next) {
   try {
-    const savedUser = await newUser.save()
-    res.status(201).json(savedUser)
+    const dto = await validateIt(req.body, UserDto, UserDroGroup.REGISTER)
 
+    dto.password = await bcrypt.hash(dto.password, 8)
+    const user = await createUserService(dto);
+
+    res.status(200).send(UserDefinedError.Success(user))
   } catch (error) {
-    res.status(500).send(error)
+    next(error)
   }
-
 }
 
-export async function loginUser(req: any, res: any) {
+export async function loginUser(req: any, res: any, next) {
   try {
-    const user = await User.findOne({ username: req.body.username })
-    !user && res.status(404).send('User not found')
+    const data = await validateIt(req.body, UserDto, UserDroGroup.LOGIN)
+    let user = await getUserByUserNameService(data.username)
 
-    const compare = await bcrypt.compare(req.body.password, user.password)
-    if (!compare)
-      res.status(401).send('Username or password is incorrect')
-
-    const { password, ...others } = user._doc
-
+    const compare = await bcrypt.compare(data.password, user.password)
+    if (!compare) throw UserError.NotFound(data.username)
+    user = user.toObject()
+    delete user.password;
 
     const token = jwt.sign({
-      id: user._id,
-      isAdmin: user.isAdmin
+      _id: user._id
     }, String(process.env.JWT_KEY), { expiresIn: "1d" })
 
-
-    res.status(200).send({ ...others, token })
+    res.status(200).send(UserDefinedError.Success({ ...user, token }))
   } catch (error) {
-    res.status(500).send(error)
+    next(error)
   }
 }
 

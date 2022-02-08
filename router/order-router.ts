@@ -1,6 +1,6 @@
 import express from 'express'
 import { createOrder, deleteOrder, getAllOrders, getMonthlyIncome, getOrder, updateOrder } from '../controller/order-controller';
-import { verifyToken, verifyTokenAdmin, verifyTokenAndAuthorization } from '../middleware/verifyToken'
+import { verifyAdmin, verifyToken } from '../middleware/auth'
 
 
 const router = express.Router()
@@ -11,21 +11,21 @@ const router = express.Router()
 router.post("/", verifyToken, createOrder);
 
 //UPDATE
-router.put("/:id", verifyTokenAdmin, updateOrder);
+router.put("/:id", verifyToken, verifyAdmin, updateOrder);
 
 //DELETE
-router.delete("/:id", verifyTokenAdmin, deleteOrder);
+router.delete("/:id", verifyToken, verifyAdmin, deleteOrder);
 
 //GET USER ORDERS
-router.get("/find/:userId", verifyTokenAndAuthorization, getOrder);
+router.get("/find/:userId", verifyToken, getOrder);
 
 // //GET ALL
 
-router.get("/", verifyTokenAdmin, getAllOrders);
+router.get("/", verifyToken, verifyAdmin, getAllOrders);
 
 // GET MONTHLY INCOME
 
-router.get("/income", verifyTokenAdmin, getMonthlyIncome);
+router.get("/income", verifyToken, verifyAdmin, getMonthlyIncome);
 
 
 

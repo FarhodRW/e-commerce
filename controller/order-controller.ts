@@ -1,4 +1,4 @@
-import { Order } from '../model/order'
+import { Order } from '../db/model/oder/order.model'
 
 export async function createOrder(req: any, res: any) {
   const newOrder = new Order(req.body);
@@ -37,7 +37,7 @@ export async function deleteOrder(req: any, res: any) {
 
 export async function getOrder(req: any, res: any) {
   try {
-    const orders = await Order.find({ userId: req.params.userId });
+    const orders = await Order.find({ userId: req.user._id });
     res.status(200).json(orders);
   } catch (err) {
     res.status(500).json(err);

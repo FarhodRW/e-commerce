@@ -1,7 +1,9 @@
 import mongoose from 'mongoose'
+import { CollectionNames } from '../../common/common.model';
 
 const UserSchema = new mongoose.Schema(
   {
+    fullName: { type: String, required: true, unique: true, trim: true },
     username: { type: String, required: true, unique: true, trim: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
@@ -10,7 +12,7 @@ const UserSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true, collection: CollectionNames.USERS }
 );
 
-export const User = mongoose.model("User", UserSchema);
+export const User = mongoose.model(CollectionNames.USERS, UserSchema);

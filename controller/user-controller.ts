@@ -1,30 +1,28 @@
-import { User } from '../model/user'
+import { User } from '../db/model/user/user.model'
 import bcrypt from 'bcrypt'
-import { userJoiSchema } from '../middleware/validation'
-
-
+import { validateIt } from '../middleware/validation'
+import { UserDto } from '../dto/user.dto'
 
 export async function updateUser(req: any, res: any) {
-  if (req.body.password) {
-    req.body.password = await bcrypt.hash(req.body.password, 8)
-    try {
-      const validation = await userJoiSchema.validateAsync(req.body)
+  try {
+    const data = await validateIt(req.body, UserDto, 'update')
+    if (data.password)
+      data.password = await bcrypt.hash(req.body.password, 8)
 
-      const updatedUser = await User.findByIdAndUpdate(req.params.id,
-        {
-          $set: req.body
-        }, { new: true }
-      )
-      res.status(201).json(updatedUser)
-    } catch (error) {
-      res.status(500).json(error)
-    }
+    const updatedUser = await User.findByIdAndUpdate(req.user._id,
+      {
+        $set: data
+      }, { new: true }
+    )
+    res.status(201).json(updatedUser)
+  } catch (error) {
+    res.status(500).json(error)
   }
 }
 
 export async function deleteUser(req: any, res: any) {
   try {
-    const removedUser = await User.findByIdAndDelete(req.params.id)
+    const removedUser = await User.findByIdAndDelete(req.user._id)
     res.status(201).send(`Deleted user ${removedUser}`)
   } catch (error) {
     res.status(500).send(error)

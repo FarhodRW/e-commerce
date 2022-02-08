@@ -1,6 +1,6 @@
 import express from 'express'
 import { createCart, deleteCart, getAllCarts, getCart, updateCart } from '../controller/cart-controller'
-import { verifyToken, verifyTokenAdmin } from '../middleware/verifyToken'
+import { verifyAdmin, verifyToken } from '../middleware/auth'
 
 
 const router = express.Router()
@@ -21,7 +21,7 @@ router.delete('/:id', verifyToken, deleteCart)
 router.get('/find/:UserId', getCart)
 
 //Get all products(ONLLY admin)
-router.get('/carts', verifyTokenAdmin, getAllCarts)
+router.get('/carts', verifyToken, verifyAdmin, getAllCarts)
 
 
 

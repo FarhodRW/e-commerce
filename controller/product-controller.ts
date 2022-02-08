@@ -1,4 +1,8 @@
-import { Product } from '../model/product'
+import { UserDefinedError } from '../db/common/common.error';
+import { Product } from '../db/model/product/product.model'
+import { ProductDtoGroup, ProductGetDto } from '../dto/product.dto';
+import { validateIt } from '../middleware/validation';
+import { getProductsPagingService } from '../service/product.service';
 
 export async function createProduct(req: any, res: any) {
 
@@ -27,7 +31,7 @@ export async function imgUpload(req: any, res: any) {
   }
 
 }
-export async function updateProduct(req: any, res: any) {
+export async function updateProduct(req, res: any) {
 
   try {
     const updatedProduct = await Product.findByIdAndUpdate(req.params.id,
@@ -59,25 +63,49 @@ export async function getProduct(req: any, res: any) {
   }
 }
 
-export async function getSortedProducts(req: any, res: any) {
-  const qNew = req.query.new
-  const qCategory = req.query.category
-
+export async function getProductsByPagingController(req, res, next) {
   try {
-    let products
-    if (qNew) {
-      products = await Product.find().sort({ createdAt: -1 })
-    }
-    else if (qCategory) {
-      products = await Product.find({
-        categories: {
-          $in: [qCategory]
-        }
-      })
-    }
-    else products = await Product.find()
-    res.status(201).send(products)
-  } catch (error) {
-    res.status(500).send(error)
+
+    const data = await validateIt(req.query, ProductGetDto, ProductDtoGroup.GET_PAGING);
+
+    const products = await getProductsPagingService(data);
+
+    res.status(200).send(UserDefinedError.Success(products))
+
+  } catch (e) {
+    next(e)
   }
 }
+
+
+export async function getProductsByCategory(req, res) {
+  try {
+    const products = await Product.find({ categoryId: req.params.id }).limit(12).sort({ createdAt: -1 })
+    res.status(200).send(products)
+  } catch (error) {
+    res.status(404).send(error)
+  }
+
+}
+
+
+export async function getProductsByQuery(req, res) {
+  const qCheap = req.query.cheap
+  const qExpesnive = req.query.expensive
+
+  try {
+    if (qCheap) {
+      const products = await Product.find({ category: req.params.id }).limit(12).sort({ price: -1 })
+      return res.status(200).send(products)
+
+    }
+    else if (qExpesnive) {
+      const products = await Product.find({ category: req.params.id }).limit(12).sort({ price: 1 })
+      return res.status(200).send(products)
+
+    }
+  } catch (error) {
+    res.status(404).send(error)
+  }
+}
+
