@@ -1,68 +1,67 @@
-import { User } from '../db/model/user/user.model'
 import bcrypt from 'bcrypt'
 import { validateIt } from '../middleware/validation'
-import { UserDto } from '../dto/user.dto'
+import { UserDtoGroup, UserDto, UserGetDto } from '../dto/user.dto'
+import { deleteUserById, getUserByUserNameService, getUsersService, getUserStatsService, updateUserService } from '../service/user.service'
+import { success } from '../middleware/methods'
 
-export async function updateUser(req: any, res: any) {
+export async function updateUserController(req: any, res: any, next) {
   try {
-    const data = await validateIt(req.body, UserDto, 'update')
-    if (data.password)
-      data.password = await bcrypt.hash(req.body.password, 8)
+    const _id = req.user._id
+    const dto = await validateIt(req.body, UserDto, 'update')
+    if (dto.password)
+      dto.password = await bcrypt.hash(req.body.password, 8)
 
-    const updatedUser = await User.findByIdAndUpdate(req.user._id,
-      {
-        $set: data
-      }, { new: true }
-    )
-    res.status(201).json(updatedUser)
+    const updatedUser = await updateUserService(_id, dto)
+    success(res, updatedUser)
   } catch (error) {
-    res.status(500).json(error)
+    next(error)
   }
 }
 
-export async function deleteUser(req: any, res: any) {
+export async function deleteUserController(req: any, res: any, next) {
   try {
-    const removedUser = await User.findByIdAndDelete(req.user._id)
-    res.status(201).send(`Deleted user ${removedUser}`)
+    const _id = req.user.id
+    const removedUser = await deleteUserById(_id)
+    success(res)
   } catch (error) {
-    res.status(500).send(error)
+    next(error)
   }
 }
 
-export async function getUser(req: any, res: any) {
+export async function getUserController(req: any, res: any, next) {
   try {
-    const user = await User.findById(req.params.id)
-    res.status(201).send(user)
+    const username = req.params.username
+    const user = await getUserByUserNameService(username)
+
+    success(res, user)
   } catch (error) {
-    res.status(500).send(error)
+    next(error)
   }
 }
 
-export async function getAllUsers(req: any, res: any) {
-  const query = req.query.new
+export async function getAllUsersController(req: any, res: any, next) {
 
   try {
-    const users = query
-      ? await User.find().sort({ _id: -1 }).limit(5)
-      : await User.find()
-    res.status(201).send(users)
+    console.log(req.query)
+    const data = await validateIt(req.query, UserGetDto, UserDtoGroup.GET_PAGING)
+    console.log(data)
+    const response = await getUsersService(data)
+    success(res, response)
   } catch (error) {
-    res.status(500).send(error)
+    next(error)
   }
 }
 
-export async function getUserStats(req: any, res: any) {
+export async function getUserStatsController(req: any, res: any, next) {
   const date = new Date();
   const lastYear = new Date(date.setFullYear(date.getFullYear() - 1))
   try {
-    const data = await User.aggregate([
-      { $match: { createdAt: { $gte: lastYear } } },
-      { $project: { month: { $month: '$createdAt' } } },
-      { $group: { _id: "$month", total: { $sum: 1 } } }
-
-    ])
-    res.status(200).send(data)
+    const data = await getUserStatsService(lastYear)
+    success(res, data)
   } catch (error) {
-    res.status(500).send(error)
+    next(error)
   }
 }
+
+
+//almost done

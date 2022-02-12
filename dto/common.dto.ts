@@ -1,4 +1,5 @@
-import { IsNumber, IsNumberString, IsOptional, IsString } from "class-validator";
+import { Transform } from "class-transformer";
+import { IsNumber, isNumberString, IsOptional, IsString } from "class-validator";
 
 export class BaseDtoGroup {
   static CREATE = 'create'
@@ -8,7 +9,8 @@ export class BaseDtoGroup {
 }
 
 export class BasePagingDto {
-  @IsNumberString({
+  @Transform(({ value }) => isNumberString(value) ? Number(value) : value)
+  @IsNumber({
     allowNaN: false,
     allowInfinity: false
   }, {
@@ -16,7 +18,8 @@ export class BasePagingDto {
   })
   page: number;
 
-  @IsNumberString({
+  @Transform(({ value }) => isNumberString(value) ? Number(value) : value)
+  @IsNumber({
     allowInfinity: false,
     allowNaN: false
   }, {

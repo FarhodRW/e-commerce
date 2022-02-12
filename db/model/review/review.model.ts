@@ -4,8 +4,8 @@ import { CollectionNames } from '../../common/common.model';
 
 const ReviewSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: CollectionNames.USERS },
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: CollectionNames.PRODUCTS },
     comment: { type: String },
     rating: { type: Number, max: 5, min: 1, default: 0 }
 

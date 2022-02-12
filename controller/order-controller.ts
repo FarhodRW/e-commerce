@@ -1,82 +1,86 @@
-import { Order } from '../db/model/oder/order.model'
 
-export async function createOrder(req: any, res: any) {
-  const newOrder = new Order(req.body);
+import { BaseDtoGroup } from '../dto/common.dto'
+import { OrderDto } from '../dto/order.dto'
+import { success } from '../middleware/methods'
+import { validateIt } from '../middleware/validation'
+import {
+  createOrderService,
+  deleteOrderByIdService,
+  getAllOrdersService,
+  getMonthlyIncomeSevice,
+  getOrderByUserIdService,
+  updateOrderService
+} from '../service/order.service'
+import { getProductByIdService } from '../service/product.service'
 
+
+export async function createOrderController(req: any, res: any, next) {
   try {
-    const savedOrder = await newOrder.save();
-    res.status(200).json(savedOrder);
-  } catch (err) {
-    res.status(500).json(err);
+    const data = await validateIt(req.body, OrderDto, BaseDtoGroup.CREATE)
+
+    let sum = 0;
+    for (const item of data.products) {
+      const product = await getProductByIdService(item.productId);
+      sum += product.price * item.quantity
+    }
+    data.total_price = sum;
+
+    const order = await createOrderService(data)
+    success(res, order)
+  } catch (error) {
+    next(error)
   }
 }
 
-export async function updateOrder(req: any, res: any) {
+
+export async function updateOrderController(req: any, res: any, next) {
   try {
-    const updatedOrder = await Order.findByIdAndUpdate(
-      req.params.id,
-      {
-        $set: req.body,
-      },
-      { new: true }
-    );
-    res.status(200).json(updatedOrder);
+    const _id = req.params.id
+    const dto = await validateIt(req.body, OrderDto, BaseDtoGroup.CREATE)
+    const updatedOrder = await updateOrderService(dto, _id)
+    success(res, updateOrderController)
   } catch (err) {
-    res.status(500).json(err);
+    next(err)
   }
 }
 
-export async function deleteOrder(req: any, res: any) {
+export async function deleteOrderController(req: any, res: any, next) {
   try {
-    await Order.findByIdAndDelete(req.params.id);
-    res.status(200).json("Order has been deleted...");
+    const _id = req.params.id
+    await deleteOrderByIdService(_id)
+    success(res, 'Order has been deleted')
   } catch (err) {
-    res.status(500).json(err);
+    next(err)
   }
 }
 
-export async function getOrder(req: any, res: any) {
+export async function getOrderController(req: any, res: any, next) {
   try {
-    const orders = await Order.find({ userId: req.user._id });
-    res.status(200).json(orders);
+    const userId = req.user._id
+    const orders = await getOrderByUserIdService(userId)
+    success(res, orders)
   } catch (err) {
-    res.status(500).json(err);
+    next(err)
   }
 }
 
-export async function getAllOrders(req: any, res: any) {
+export async function getAllOrders(req: any, res: any, next) {
   try {
-    const orders = await Order.find();
-    res.status(200).json(orders);
+    const orders = await getAllOrdersService();
+    success(res, orders)
   } catch (err) {
-    res.status(500).json(err);
+    next(err)
   }
 }
 
-export async function getMonthlyIncome(req: any, res: any) {
-  const date = new Date();
-  const lastMonth = new Date(date.setMonth(date.getMonth() - 1));
-  const previousMonth = new Date(new Date().setMonth(lastMonth.getMonth() - 1));
-
+export async function getMonthlyIncomeController(req: any, res: any, next) {
   try {
-    const income = await Order.aggregate([
-      { $match: { createdAt: { $gte: previousMonth } } },
-      {
-        $project: {
-          month: { $month: "$createdAt" },
-          sales: "$amount",
-        },
-      },
-      {
-        $group: {
-          _id: "$month",
-          total: { $sum: "$sales" },
-        },
-      },
-    ]);
-    res.status(200).json(income);
+    const income = getMonthlyIncomeSevice()
+    success(res, income)
   } catch (err) {
-    res.status(500).json(err);
+    next()
   }
 }
 
+
+//done

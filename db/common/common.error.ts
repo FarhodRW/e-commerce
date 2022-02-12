@@ -11,7 +11,13 @@ export enum ErrorCodes {
 }
 
 export class UserDefinedError {
+
   constructor(public code: number, public message: string, public data?: any) {
+  }
+
+
+  static ServerError(data: any = 'error') {
+    return new UserDefinedError(ErrorCodes.DEFAULT + 4, 'Server error', data)
   }
 
   static UnknownError(data: any) {
@@ -30,6 +36,8 @@ export class UserDefinedError {
     return new UserDefinedError(ErrorCodes.SUCCESS, 'Success', data)
   }
 }
+
+
 
 export async function commonErrorHandler(err, req, res, next) {
   console.log(err)

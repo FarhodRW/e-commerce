@@ -1,24 +1,24 @@
 import express from 'express'
-import { deleteUser, getAllUsers, getUser, getUserStats, updateUser } from '../controller/user-controller'
+import { deleteUserController, getAllUsersController, getUserController, getUserStatsController, updateUserController } from '../controller/user-controller'
 import { verifyAdmin, verifyToken } from '../middleware/auth'
 
 const router = express.Router()
 
 //updating user
-router.put('/:id', verifyToken, updateUser)
+router.put('/', verifyToken, updateUserController)
 
 //deleting user
 
-router.delete('/:id', verifyToken, deleteUser)
+router.delete('/delete', verifyToken, deleteUserController)
 
-//get a user
-router.get('/find/:id', verifyToken, verifyAdmin, getUser)
+// get a user
+router.get('/me', verifyToken, verifyAdmin, getUserController)
 
 //get all users
 
-router.get('/users', verifyToken, verifyAdmin, getAllUsers)
+router.get('/', verifyToken, verifyAdmin, getAllUsersController)
 
 //get user statistics
-router.get('/stats', verifyToken, verifyAdmin, getUserStats)
+router.get('/stats', verifyToken, verifyAdmin, getUserStatsController)
 
 export = router

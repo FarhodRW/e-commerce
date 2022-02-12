@@ -1,30 +1,31 @@
-import mongoose, { Types } from "mongoose";
+import mongoose, { mongo, Types } from "mongoose";
 import { CollectionNames } from "../../common/common.model";
 
-enum ORDER_STATE {
+export enum ORDER_STATE {
   PENDING = 'pending',
   DONE = 'done',
   CANCELED = 'canceled',
   IN_PROGRESS = 'in_progress'
 }
 
+const OrderProductsSchema = new mongoose.Schema({
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: CollectionNames.PRODUCTS
+  },
+  quantity: {
+    type: Number,
+    default: 1,
+  },
+})
+
 const OrderSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    products: [
-      {
-        productId: {
-          type: mongoose.Schema.Types.ObjectId, ref: 'Product'
-        },
-        quantity: {
-          type: Number,
-          default: 1,
-        },
-      },
-    ],
-    amount: { type: Number, required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: CollectionNames.USERS },
     address: { type: Object, required: true },
-    status: { type: String, enum: ORDER_STATE },
+    state: { type: String, enum: ORDER_STATE, default: ORDER_STATE.PENDING },
+    total_price: { type: Number, default: 0 },
+    products: [OrderProductsSchema]
   },
   { timestamps: true, collection: CollectionNames.ORDERS }
 );

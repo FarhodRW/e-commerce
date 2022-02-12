@@ -9,4 +9,8 @@ export class ProductError {
     return new UserDefinedError(ErrorCodes.PRODUCTS + 1, 'Product with this details already exists', data);
   };
 
+  static NotEnoughAmount(data: any = null) {
+    return new UserDefinedError(ErrorCodes.PRODUCTS + 2, 'Not enough product in warehouse')
+  }
+
 }

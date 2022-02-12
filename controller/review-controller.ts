@@ -1,51 +1,52 @@
-import { Types } from "mongoose";
-import mongoose from 'mongoose'
-import { Review } from "../db/model/review/review.model"
+import { validateIt } from "../middleware/validation";
+import { ReviewDto } from "../dto/review.dto";
+import { createReviewService, deleteReviewById, getReviewService, updateReviewService } from '../service/review.service';
+import { success } from '../middleware/methods';
 
 
-export async function createReviewController(req, res) {
+export async function createReviewController(req, res, next) {
+  try {
+    req.body.userId = req.user.id
+    const dto = await validateIt(req.body, ReviewDto, 'create')
+    const newReview = await createReviewService(dto)
 
-  req.body.userId = req.user.id
-  const newReview = new Review(req.body)
-  const savedReview = await newReview.save()
-  res.status(201).send(savedReview)
-
+    success(res, newReview)
+  } catch (error) {
+    next(error)
+  }
 }
 
-export async function getProductReview(req, res) {
-  let reviewAggregation = await Review.aggregate([
-    //stage1
-    {
-      $match: { productId: new mongoose.Types.ObjectId(req.params.id) }
-    },
-    //stage2
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'userId',
-        foreignField: '_id',
-        as: 'author'
-      }
-    },
-    {
-      $unwind: {
-        path: '$author',
-        preserveNullAndEmptyArrays: true
-      }
-    },
-    {
-      $project: {
-        author: {
-          _id: 1,
-          name: 1
-        },
-        rating: 1,
-        comment: 1
-      }
-    }
+export async function updateReviewController(req: any, res: any, next) {
+  try {
+    const _id = req.params.id
+    const dto = await validateIt(req.body, ReviewDto, 'update')
+    const updatedReview = await updateReviewService(_id, dto)
+    success(res, updatedReview)
+  } catch (error) {
+    next()
+  }
+}
 
-  ])
-  res.send(reviewAggregation)
+export async function deleteReviewController(req: any, res: any, next) {
+  try {
+    const _id = req.params.id
+    const removedReview = await deleteReviewById(_id)
+    success(res, removedReview)
+  } catch (error) {
+    next(error)
+  }
+}
+
+
+export async function getProductReviewController(req, res, next) {
+  try {
+    const productId = req.params.id
+    const reviewAggregation = await getReviewService(productId)
+    success(res, reviewAggregation)
+  } catch (error) {
+    next(error)
+  }
+
 }
 
 

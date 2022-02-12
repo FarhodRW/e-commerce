@@ -4,6 +4,7 @@ import { User } from '../db/model/user/user.model'
 
 export const verifyToken = (req: any, res: any, next: any) => {
   const authToken = req.headers.authorization
+  console.log(authToken)
 
   if (authToken) {
     const token = authToken.split(' ')[1]
@@ -12,7 +13,8 @@ export const verifyToken = (req: any, res: any, next: any) => {
       if (err) {
         res.status(403).json('Token is not valid!');
       }
-      const user = await User.findById(data._id)
+      console.log(token)
+      const user = await User.findById(data.id)
       if (!user) {
         res.status(403).json('Token is not valid!');
       }
@@ -24,7 +26,12 @@ export const verifyToken = (req: any, res: any, next: any) => {
 }
 
 export async function verifyAdmin(req, res, next) {
-  if (!req.user.isAdmin) throw UserDefinedError.NotEnoughPermission(req.user._id)
-  next()
+  try {
+    if (!req.user.isAdmin) throw UserDefinedError.NotEnoughPermission(req.user._id)
+    next()
+  } catch (e) {
+    next(e)
+  }
+
 }
 
